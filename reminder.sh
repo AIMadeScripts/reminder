@@ -41,14 +41,15 @@ fi
 
 clear
 
-function menu {
   if ! command -v gnome-terminal >/dev/null 2>&1; then
-    echo "Shell wont work until you run:"
-    echo "sudo apt-get install gnome-terminal"
+    export gnome=$(echo "Shell wont work until you run: sudo apt-get install gnome-terminal")
   else
     :
   fi
+
+function menu {
   clear
+  echo $gnome
   echo "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⠀"
   echo "⠀⠀⠀⠀⢀⠀⠀⠀⠊⣉⡉⠄⠀⠀⠀⠀⠀⠀⠀"
   echo "⠀⠀⠀⠠⠂⠀⣀⠠⡀⠈⠀⡀⠀⠀⠂⠄⠀⢀⠀"
