@@ -64,6 +64,7 @@ function menu {
   echo -e "\033[32m(19) Common SQL Injections\033[0m"
   echo -e "\033[32m(20) Cracking files/hashes\033[0m"
   echo -e "\033[32m(shell) Open a new terminal\033[0m"
+  echo -e "\033[32m(exit) ... Obviously to exit\033[0m"
   echo -e "\033[32m(99) Helpful commands to remember\033[0m"
   echo "Enter your selection: "
   read selection
