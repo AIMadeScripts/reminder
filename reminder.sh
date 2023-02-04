@@ -10,10 +10,27 @@ if [ -z "$T" ]; then
   T="127.0.0.1"
 fi
 
-myip=$(ifconfig tun0 | awk '/inet / {print $2}')
-if [[ "$myip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "The IP address is $myip"
-else
+devices=("tun0" "eth0" "ens33" "eth1")
+for device in "${devices[@]}"; do
+  myip=$(ifconfig $device | awk '/inet / {print $2}')
+  if [[ "$myip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "The IP address is $myip"
+    break
+  fi
+done
+
+if [ -z "$myip" ]; then
+  interfaces=$(ifconfig -s | awk '{print $1}' | grep -E '^enp.*')
+  for interface in $interfaces; do
+    myip=$(ifconfig $interface | awk '/inet / {print $2}')
+    if [[ "$myip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      echo "The IP address is $myip"
+      break
+    fi
+  done
+fi
+
+if [ -z "$myip" ]; then
   myip=$(curl -s ifconfig.me)
   if [[ "$myip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo "The IP address is $myip"
@@ -42,6 +59,7 @@ function menu {
   echo "Remember to ALWAYS check for each service on each subdomain. Also check all directories on different ports. This script does not autofill the ports you find"
   echo -e "\033[35mScript will default to Tun0 OpenVPN IP for you and add it to commands otherwise tries Public IP, then IPv4 if that fails.\033[0m"
   echo -e "\033[1mRobot's Ultra Special Hacking Cheatsheet\033[0m - \033[31mSometimes you just need a reminder of where to look next.\033[0m"
+  echo -e "Your IP $myip | Your target $T"
   echo -e "\033[32m(0) Manually input your IP and Target IP to change the script variables.\033[0m"
   echo -e "\033[32m(1) Port Scan Commands\033[0m"
   echo -e "\033[32m(2) Subdomain Scan Commands\033[0m"
@@ -71,7 +89,6 @@ function menu {
   clear
   case $selection in
     0)
-      echo "Changing these will auto update the rest of the example commands so they can be copy pasted"
       read -p "Enter Target Site (IP or Website.com with no trailing forward slash) Current target: $T: " "T"
       read -p "Enter Your IP to use (Current IP: $myip): " "myip"
       ;;
@@ -300,7 +317,7 @@ while true; do
   if [ "$input" == "exit" ]; then
     break
   elif [ "$input" == "shell" ]; then
-    /bin/mate-terminal -e "bash -c command;bash"
+    gnome-terminal -e "bash -c command;bash"
     continue
   fi
 done
