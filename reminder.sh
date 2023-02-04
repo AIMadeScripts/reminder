@@ -281,6 +281,7 @@ function menu {
       ;;
     exit)
       exit
+      ;;
     1337)
       echo "You found the secret checklist menu!"
       echo "This is still a work in progress. Stay tuned."
