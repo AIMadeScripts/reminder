@@ -63,6 +63,7 @@ function menu {
   echo -e "\033[32m(18) DNS Zone Transfers\033[0m"
   echo -e "\033[32m(19) Common SQL Injections\033[0m"
   echo -e "\033[32m(20) Cracking files/hashes\033[0m"
+  echo -e "\033[32m(shell) Open a new terminal\033[0m"
   echo -e "\033[32m(99) Helpful commands to remember\033[0m"
   echo "Enter your selection: "
   read selection
@@ -274,6 +275,12 @@ function menu {
       echo -e "\033[34mCompile .exe on linux\033[0m"
       echo "i586-mingw32msvc-gcc exploit.c -lws2_32 -o exploit.exe"
       ;;
+    shell)
+      gnome-terminal -e "bash -c command;bash"
+      menu
+      ;;
+    exit)
+      exit
     1337)
       echo "You found the secret checklist menu!"
       echo "This is still a work in progress. Stay tuned."
@@ -287,8 +294,11 @@ function menu {
 while true; do
   menu
   echo ""
-  read -p "Press enter to return to the menu or type 'exit' to quit: " input
+  read -p "Press enter to return to the menu, type 'exit' to quit, or type 'shell' to open a new terminal: " input
   if [ "$input" == "exit" ]; then
     break
+  elif [ "$input" == "shell" ]; then
+    gnome-terminal -e "bash -c command;bash"
+    continue
   fi
 done
