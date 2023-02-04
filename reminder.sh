@@ -300,7 +300,7 @@ while true; do
   if [ "$input" == "exit" ]; then
     break
   elif [ "$input" == "shell" ]; then
-    gnome-terminal -e "bash -c command;bash"
+    /bin/mate-terminal -e "bash -c command;bash"
     continue
   fi
 done
