@@ -301,7 +301,7 @@ function menu {
       echo "i586-mingw32msvc-gcc exploit.c -lws2_32 -o exploit.exe"
       ;;
     shell)
-      gnome-terminal -e "bash -c command;bash"
+      gnome-terminal -- bash -c "echo fresh terminal; bash"
       menu
       ;;
     exit)
@@ -324,7 +324,7 @@ while true; do
   if [ "$input" == "exit" ]; then
     break
   elif [ "$input" == "shell" ]; then
-    gnome-terminal -e "bash -c command;bash"
+    gnome-terminal -- bash -c "echo fresh terminal; bash"
     continue
   fi
 done
