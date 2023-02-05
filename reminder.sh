@@ -486,7 +486,10 @@ while true; do
     echo "Checking httpx/cms for each port on the IP"
     gnome-terminal --tab -t "Site Software HTTPX" -- bash -c "echo 'running $httpx against ports found'; httpx -status-code -title -tech-detect -list tmp 2>&1; bash"
     echo "Running directory scans against each webserver found"
-    gnome-terminal --tab -t "Site Software WhatWeb" -- bash -c "whatweb --input-file=tmp; rm tmp; bash"
+    gnome-terminal --tab -t "Site Software WhatWeb" -- bash -c "whatweb --input-file=tmp >> sitesoftware.txt; rm tmp; bash"
+    sleep 5
+    awk {'print $1'} sitesoftware.txt | awk '{ sub(/\/$/, ""); print }' >> Directoriestoscan
+    sleep 5
     continue
   fi
 done
