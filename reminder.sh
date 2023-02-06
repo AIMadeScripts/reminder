@@ -3,8 +3,10 @@
 #Contact me here: https://hackforums.net/member.php?action=profile&uid=2682887
 
 clear
-##Enter website target and it defines it as $T
-read -p "Enter Target Site (IP or Website.com with no trailing forward slash): " "T"
+##Enter website target and it defines it as $T and target domain as $TD
+read -p "Enter Target IP: " "T"
+echo "Make sure you have no trailing forwardslash, www or http included"
+read -p "Enter Target domain (google.com) - You can always fill this in later once you find it: " "TD"
 
 if [ -z "$T" ]; then
   T="127.0.0.1"
@@ -54,12 +56,16 @@ nmap3="nmap -v -sS -A -T4 $T"
 nmap4="nmap –script smb-check-vulns.nse –script-args=unsafe=1 -p445 $T"
 nmap5="nmap –script smtp-commands,smtp-enum-users,smtp-vuln-cve2010-4344,smtp-vuln-cve2011-1720,smtp-vuln-cve2011-1764 -p 25 $T"
 nmap6="nmap -sV -Pn -vv $T -p 3306 --script mysql-audit,mysql-databases,mysql-dump-hashes,mysql-empty-password,mysql-enum,mysql-info,mysql-query,mysql-users,mysql-variables,mysql-vuln-cve2012-2122"
-wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$site\" http://$site"
+wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$TD\" http://$TD"
 whatweb="whatweb $T"
+whatwebdomain="whatweb $TD"
 httpx="/usr/local/bin/httpx -status-code -title -tech-detect $T -p 8080,443,80,9999 2>&1"
+httpxdomain="/usr/local/bin/httpx -status-code -title -tech-detect $TD -p 8080,443,80,9999 2>&1"
 dirsearch="dirsearch -u $T -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
+dirsearchdomain="dirsearch -u $TD -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -q -x 404 --exit-on-error -t 20 --cookie=$cookie --exclude-subdirs=js,css"
 host="python3 -m http.server 80"
 wpscan="wpscan --url http://$T --enumerate u,vp,vt"
+wpscandomain="wpscan --url http://$TD --enumerate u,vp,vt"
 sqlmap="sqlmap -u \"https://$T/index.php?m=Index\" --level 5 --risk 3 --dump"
 smbclient="smbclient -L //$T -U \"\""
 smbmap="smbmap -H $T"
@@ -86,6 +92,7 @@ snmpwalk="snmpwalk -v 1 -c public $T"
 snmpbulkwalk="snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
 nmapfromrustscan="nmap -sC -sV $T -p"
 gobuster="gobuster  dir --wordlist /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  -u http://$T -x php,txt,html,sh,cgi"
+gobusterdomain="gobuster  dir --wordlist /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  -u http://$TD -x php,txt,html,sh,cgi"
 apiendpoints="Test api endpoints for breakouts: /ping?ip=google.com"
 
 
@@ -109,7 +116,7 @@ function menu {
   echo "Remember to ALWAYS check for each service on each subdomain. Also check all directories on different ports. This script does not autofill the ports you find"
   echo -e "\033[35mScript will default to Tun0 OpenVPN IP for you and add it to commands otherwise tries Public IP, then IPv4 if that fails.\033[0m"
   echo -e "\033[1mRobot's Ultra Special Hacking Cheatsheet\033[0m - \033[31mSometimes you just need a reminder of where to look next.\033[0m"
-  echo -e "Your IP $myip | Your target $T"
+  echo -e "Your IP $myip | Your targets IP $T | Your targets domain: $TD" 
   echo -e "\033[32m(0) Manually input your IP and Target IP to change the script variables.\033[0m"
   echo -e "\033[32m(1) Port Scan Commands\033[0m"
   echo -e "\033[32m(2) Subdomain Scan Commands\033[0m"
@@ -139,7 +146,8 @@ function menu {
   clear
   case $selection in
     0)
-      read -p "Enter Target Site (IP or Website.com with no trailing forward slash) Current target: $T: " "T"
+      read -p "Enter Target Site (IP) Current target: $T: " "T"
+      read -p "Enter Target Site domain (no https/www/trailing forward slash) Current target: $TD: " "TD"
       read -p "Enter Your IP to use (Current IP: $myip): " "myip"
       ;;
     1)
@@ -162,6 +170,7 @@ function menu {
       echo "(nmap6) $nmap6"
       ;;
     2)
+      wfuzz="wfuzz -v -c -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt -Z -H \"Host: FUZZ.$TD\" http://$TD"
       echo -e "\033[34mWe can use wfuzz to try and find subdomains if we have found a domain name or vhost such as website.com\033[0m"
       echo "(wfuzz) $wfuzz"
       ;;
@@ -169,13 +178,17 @@ function menu {
       echo -e "\033[34mWe can use whatweb or httpx to check what a subdomain, subfolder or domain is hosting including version numbers\033[0m"
       echo "(whatweb) $whatweb"
       echo "(httpx) $httpx"
+      echo "(whatweb2) $whatwebdomain"
+      echo "(httpx2) $httpxdomain"
       ;;
     4)
       echo -e "\033[34mIf you have logged into the site, make sure to run it with cookies using --cookies= to possible find more results\033[0m"
       echo "(dirsearch) $dirsearch"
+      echo "(dirsearchdomain) $dirsearchdomain"
       echo ""
       echo "Gobuster is an alternative for directory finding"
       echo "(gobuster) $gobuster"
+      echo "(gobuster2) $gobusterdomain"
       ;;
     5)
       echo -e "\033[34mTo host a local folder make sure you are in that folder within the terminal you run this command\033[0m"
@@ -184,6 +197,7 @@ function menu {
     6)
       echo -e "\033[34mWordpress scanning is easy, if you have an API key from wpscan.com use the api-token parameter --api-token=\033[0m"
       echo "(wpscan) $wpscan"
+      echo "(wpscan2) $wpscandomain"
       ;;
     7)
       echo -e "\033[34mJust a reminder of common folder/files to check\033[0m"
@@ -419,11 +433,20 @@ while true; do
   elif [ "$input" == "httpx" ]; then
     gnome-terminal -- bash -c "echo 'running httpx'; $httpx; bash"
     continue
+  elif [ "$input" == "whatweb2" ]; then
+    gnome-terminal -- bash -c "echo 'running $whatwebdomain'; $whatwebdomain; bash"
+    continue
+  elif [ "$input" == "httpx2" ]; then
+    gnome-terminal -- bash -c "echo 'running httpx'; $httpxdomain; bash"
+    continue
   elif [ "$input" == "dirsearch" ]; then
     gnome-terminal -- bash -c "echo 'running $dirsearch'; $dirsearch; bash"
     continue
   elif [ "$input" == "gobuster" ]; then
     gnome-terminal -- bash -c "echo 'running $gobuster'; $gobuster; bash"
+    continue
+  elif [ "$input" == "gobuster2" ]; then
+    gnome-terminal -- bash -c "echo 'running $gobusterdomain'; $gobusterdomain; bash"
     continue
   elif [ "$input" == "host" ]; then
     gnome-terminal -- bash -c "echo 'running $host'; $host; bash"
